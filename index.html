@@ -1205,6 +1205,10 @@ tr:hover td{background:var(--surface2)}
           <input id="ns-name" type="text" placeholder="Ej: Ana López">
         </div>
         <div class="fg" style="margin:0">
+          <label>Teléfono</label>
+          <input id="ns-phone" type="tel" placeholder="Ej: +34 600 000 000" autocomplete="off">
+        </div>
+        <div class="fg" style="margin:0">
           <label>Usuario (para login)</label>
           <input id="ns-user" type="text" placeholder="Ej: ana.lopez" autocomplete="off">
         </div>
@@ -2793,6 +2797,7 @@ function closeSellers(){ document.getElementById('ms').classList.remove('open');
 
 function clearSellerForm(){
   document.getElementById('ns-name').value='';
+  document.getElementById('ns-phone').value='';
   document.getElementById('ns-user').value='';
   document.getElementById('ns-pass').value='';
   document.getElementById('seller-form-title').textContent='➕ Agregar vendedor';
@@ -2811,6 +2816,7 @@ function renderSellersList(){
       <div>
         <div style="font-weight:600;font-size:.88rem">👤 ${s.name}</div>
         <div style="font-size:.74rem;color:var(--text3);margin-top:1px">
+          ${s.phone ? `📞 <span style="color:var(--text2)">${s.phone}</span> &nbsp;·&nbsp; ` : ''}
           usuario: <span style="color:var(--blue);font-family:monospace">${s.user}</span>
           &nbsp;·&nbsp; contraseña: <span style="color:var(--text2);font-family:monospace">${s.pass}</span>
         </div>
@@ -2826,6 +2832,7 @@ function editSeller(i){
   editSellerIdx = i;
   const s = SELLERS[i];
   document.getElementById('ns-name').value = s.name;
+  document.getElementById('ns-phone').value = s.phone || '';
   document.getElementById('ns-user').value = s.user;
   document.getElementById('ns-pass').value = s.pass;
   document.getElementById('seller-form-title').textContent = `✏️ Editando: ${s.name}`;
@@ -2836,9 +2843,10 @@ function editSeller(i){
 function cancelEditSeller(){ clearSellerForm(); }
 
 function saveSeller(){
-  const name = document.getElementById('ns-name').value.trim();
-  const user = document.getElementById('ns-user').value.trim().toLowerCase().replace(/\s+/g,'.');
-  const pass = document.getElementById('ns-pass').value.trim();
+  const name  = document.getElementById('ns-name').value.trim();
+  const phone = document.getElementById('ns-phone').value.trim();
+  const user  = document.getElementById('ns-user').value.trim().toLowerCase().replace(/\s+/g,'.');
+  const pass  = document.getElementById('ns-pass').value.trim();
   if(!name){ showMsg('sellers-msg','err','Escribe el nombre completo'); return; }
   if(!user){ showMsg('sellers-msg','err','Escribe un usuario'); return; }
   if(!pass){ showMsg('sellers-msg','err','Escribe una contraseña'); return; }
@@ -2849,17 +2857,17 @@ function saveSeller(){
   if(dupIdx >= 0){ showMsg('sellers-msg','err',`El usuario "${user}" ya existe`); return; }
 
   const payload = editSellerIdx !== null
-    ? { action:'saveSeller', token:getAdminToken(), sellerName:name, sellerUser:user, sellerPass:pass, editUser: SELLERS[editSellerIdx].user }
-    : { action:'saveSeller', token:getAdminToken(), sellerName:name, sellerUser:user, sellerPass:pass };
+    ? { action:'saveSeller', token:getAdminToken(), sellerName:name, sellerPhone:phone, sellerUser:user, sellerPass:pass, editUser: SELLERS[editSellerIdx].user }
+    : { action:'saveSeller', token:getAdminToken(), sellerName:name, sellerPhone:phone, sellerUser:user, sellerPass:pass };
 
   apiPost(payload).then(r => {
     if(!r.ok){ showMsg('sellers-msg','err', r.error || 'Error al guardar'); return; }
     if(editSellerIdx !== null){
-      SELLERS[editSellerIdx] = { name, user, pass };
+      SELLERS[editSellerIdx] = { name, phone, user, pass };
       showMsg('sellers-msg','ok',`✓ ${name} actualizado`);
       toast(`Vendedor "${name}" actualizado`,'ok');
     } else {
-      SELLERS.push({ name, user, pass });
+      SELLERS.push({ name, phone, user, pass });
       showMsg('sellers-msg','ok',`✓ ${name} agregado`);
       toast(`Vendedor "${name}" agregado`,'ok');
     }
